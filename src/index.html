@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="favicon.png">
+  <title>Story Apps Dicoding</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="manifest" href="./manifest.json">
+
+
+</head>
+
+<body>
+  <a href="#main-content" class="skip-link">Halaman Utama</a>
+  <header>
+    <div class="main-header container">
+      <h1 class="brand-name">
+        <a href="#/">Story Apps</a>
+      </h1>
+      <nav id="navigation-drawer" class="navigation-drawer">
+        <ul id="nav-list" class="nav-list">
+          <li><a href="#/"><i class="fa-solid fa-feather-pointed"></i> Story</a></li>
+          <li><a href="#/add"><i class="fa-solid fa-file-circle-plus"></i> Add Story</a></li>
+          <li>
+            <a href="javascript:void(0)" id="notif-btn">
+              <i class="fa-solid fa-bell"></i> Notification
+            </a>
+            <ul id="notif-dropdown" class="notif-dropdown hidden"></ul>
+          </li>
+
+          <li><a href="#" id="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        </ul>
+      </nav>
+      <button id="drawer-button" class="drawer-button">☰</button>
+    </div>
+  </header>
+
+  <main id="main-content" class="main-content" tabindex="-1"></main>
+  <footer id="footer-content" class="footer">
+    <p>&copy; 2025 Submission Aditya.</p>
+
+  </footer>
+
+
+  <div id="logoutModal" class="modal hidden">
+    <div class="modal-content">
+      <p>Apakah Anda yakin ingin logout?</p>
+      <div class="modal-actions">
+        <button id="okLogout" class="btn btn-danger">Ok</button>
+        <button id="cancelLogout" class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-buttons">
+    <button id="scrollTopBtn" class="scroll-btn"><i class="fa-solid fa-arrow-up"></i></button>
+    <button id="scrollBottomBtn" class="scroll-btn"><i class="fa-solid fa-arrow-down"></i></button>
+  </div>
+
+  <script>
+    const scrollTopBtn = document.getElementById('scrollTopBtn');
+    const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    scrollBottomBtn.addEventListener('click', () => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+
+    const skipLink = document.querySelector('.skip-link');
+    const mainContent = document.getElementById('main-content');
+    skipLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      mainContent.setAttribute('tabindex', '-1');
+      mainContent.focus();
+    });
+
+    const notifBtn = document.getElementById("notif-btn");
+    const notifDropdown = document.getElementById("notif-dropdown");
+
+    notifBtn.addEventListener("click", () => {
+      notifDropdown.classList.toggle("hidden");
+
+      const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+      if (notifications.length === 0) {
+        notifDropdown.innerHTML = "<li>Tidak ada notifikasi</li>";
+        return;
+      }
+
+      notifDropdown.innerHTML = notifications
+        .slice(0, 5)
+        .map((notif) => `
+    <li>
+      <i class="fa-solid fa-lightbulb"></i>
+      <span class="notif-text">${notif}</span>
+    </li>
+  `)
+        .join("");
+
+    });
+  </script>
+
+</body>
+
+</html>
