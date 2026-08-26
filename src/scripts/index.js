@@ -118,7 +118,8 @@ if ("serviceWorker" in navigator) {
         }
       }
 
-      initPush(registration);
+      const readyRegistration = await navigator.serviceWorker.ready;
+      initPush(readyRegistration);
     })
     .catch((err) => console.error("SW gagal daftar:", err));
 }
