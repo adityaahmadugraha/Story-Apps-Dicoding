@@ -47,6 +47,45 @@ export default class HomePage {
   `;
   }
 
+  async afterRender() {
+    console.log("HomePage.afterRender() mulai");
+
+    await loadLeaflet();
+
+    this.loader = document.querySelector("#loader");
+    this.storyList = document.querySelector("#story-list");
+    this.mapElement = document.querySelector("#map");
+    this.refreshNotif = document.querySelector("#refresh-notif");
+
+    if (this.refreshNotif) {
+      this.refreshNotif.addEventListener("click", () => {
+        this.#presenter?.loadStories();
+      });
+    }
+    this.progressBar = document.querySelector(".progress-bar-container");
+
+    if (this.#map) {
+      console.log("Hapus map lama dulu");
+      this.#map.remove();
+      this.#map = null;
+    }
+
+    console.log("Inisialisasi map baru");
+    this.#map = L.map(this.mapElement).setView([-2.5489, 118.0149], 5);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(this.#map);
+
+    setTimeout(() => {
+      console.log("invalidateSize() awal");
+      this.#map.invalidateSize(true);
+    }, 300);
+
+    this.#presenter = new HomePresenter({ view: this });
+    await this.#presenter.loadStories();
+  }
+
   async loadStories() {
     console.log("Mulai loadStories, token:", this.token, "online:", navigator.onLine);
     this.showLoading();
