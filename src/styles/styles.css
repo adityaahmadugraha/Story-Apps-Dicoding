@@ -631,3 +631,33 @@ body {
 .refresh-notif.hidden {
   display: none;
 }
+
+.story-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bookmark-btn,
+.delete-saved-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #6200ee;
+  padding: 4px 8px;
+}
+
+.bookmark-btn.saved {
+  color: #ffb300;
+}
+
+.delete-saved-btn {
+  color: #dc3545;
+}
+
+.empty-message {
+  text-align: center;
+  color: #666;
+  padding: 40px 0;
+}

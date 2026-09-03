@@ -65,17 +65,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       await app.renderPage();
     }
   });
-
-  if (Models && Models.syncOfflineStories) {
-    window.addEventListener("online", () => {
-      console.log("Online kembali, mencoba kirim offline stories...");
-      Models.syncOfflineStories();
-    });
-
-    if (navigator.onLine) {
-      Models.syncOfflineStories();
-    }
-  }
 });
 
 function urlBase64ToUint8Array(base64String) {

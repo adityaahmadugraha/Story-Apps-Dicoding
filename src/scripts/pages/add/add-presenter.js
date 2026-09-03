@@ -12,7 +12,6 @@ export default class AddPresenter {
     this.#view = view;
     this.#model = model;
     this.#auth = auth;
-    this.initSyncListener();
   }
 
   async submitStory({ description, photo, lat, lon }) {
@@ -83,25 +82,6 @@ export default class AddPresenter {
       this.#isSubmitting = false;
       this.#view.redirectToHome();
     }
-  }
-
-  initSyncListener() {
-    if (this.#syncListenerAdded) return;
-
-    if (navigator.onLine) {
-      this.triggerSync();
-    }
-
-    window.addEventListener("online", async () => {
-      if (StoryDB.isSyncInProgress()) {
-        console.log("Sync sudah berjalan, skip.");
-        return;
-      }
-      this.#view.showSnackbar("🔄 Koneksi kembali! Menyinkronkan data offline...");
-      await this.triggerSync();
-    });
-
-    this.#syncListenerAdded = true;
   }
 
   async triggerSync() {

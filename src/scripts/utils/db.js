@@ -1,8 +1,9 @@
 import { openDB } from "idb";
 
 const DB_NAME = "story-app-db";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const OBJECT_STORE_NAME = "stories";
+const SAVED_STORE_NAME = "saved_stories";
 
 const dbPromise = openDB(DB_NAME, DB_VERSION, {
   upgrade(database) {
@@ -14,6 +15,13 @@ const dbPromise = openDB(DB_NAME, DB_VERSION, {
       store.createIndex("status", "status", { unique: false });
       store.createIndex("timestamp", "timestamp", { unique: false });
     }
+
+    if (!database.objectStoreNames.contains(SAVED_STORE_NAME)) {
+      database.createObjectStore(SAVED_STORE_NAME, {
+        keyPath: "id",
+        autoIncrement: false,
+      });
+    }
   },
 });
 
@@ -23,6 +31,29 @@ function generateUUID() {
     const v = c == "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+export async function saveStory(story) {
+  const db = await dbPromise;
+  return db.put(SAVED_STORE_NAME, {
+    ...story,
+    savedAt: new Date().toISOString(),
+  });
+}
+
+export async function getSavedStories() {
+  const db = await dbPromise;
+  return db.getAll(SAVED_STORE_NAME);
+}
+
+export async function isStorySaved(id) {
+  const db = await dbPromise;
+  const story = await db.get(SAVED_STORE_NAME, id);
+  return !!story;
+}
+
+export async function deleteSavedStory(id) {
+  const db = await dbPromise;
+  return db.delete(SAVED_STORE_NAME, id);
 }
 
 export async function getAllStories() {
@@ -201,4 +232,8 @@ export default {
   cleanDuplicatePendingStories,
   isSyncInProgress,
   setSyncInProgress,
+  saveStory,
+  getSavedStories,
+  isStorySaved,
+  deleteSavedStory,
 };

@@ -146,49 +146,6 @@ class Models {
     }
     return { error: true, message: "Service Worker not supported" };
   }
-
-  async syncOfflineStories() {
-    const token = this.getToken();
-    if (!token || !navigator.onLine) return;
-
-    const offlineStories = await getOfflineStories();
-    if (!offlineStories || offlineStories.length === 0) {
-      console.log("No offline stories to sync.");
-      return;
-    }
-
-    console.log(`🔄 Models sync: ${offlineStories.length} pending stories.`);
-
-    for (const story of offlineStories) {
-      try {
-        let photoFile = null;
-        if (typeof story.photo === "string" && story.photo.startsWith("data:")) {
-          photoFile = this.base64ToFile(story.photo, "photo.jpg");
-        } else if (story.photo instanceof File || story.photo instanceof Blob) {
-          photoFile = story.photo;
-        }
-
-        const res = await this.addStory(
-          {
-            description: story.description,
-            photo: photoFile,
-            lat: story.lat,
-            lon: story.lon,
-          },
-          token
-        );
-
-        if (!res.error && !res.offline) {
-          await updateStoryStatus(story.id, "synced");
-          console.log("✅ Models sync: Story berhasil dikirim & status updated:", story.id);
-        } else {
-          console.warn("⚠️ Sync gagal untuk story:", story.id, res.message);
-        }
-      } catch (err) {
-        console.error("Gagal kirim story offline:", err);
-      }
-    }
-  }
 }
 
 export default new Models();

@@ -1,5 +1,5 @@
 import HomePresenter from "./home-presenter.js";
-
+import { saveStory, isStorySaved } from "../../utils/db.js";
 let L;
 let storyIcon;
 
@@ -59,6 +59,7 @@ export default class HomePage {
 
     if (this.refreshNotif) {
       this.refreshNotif.addEventListener("click", () => {
+        this.refreshNotif.classList.add("hidden");
         this.#presenter?.loadStories();
       });
     }
@@ -86,21 +87,6 @@ export default class HomePage {
     await this.#presenter.loadStories();
   }
 
-  async loadStories() {
-    console.log("Mulai loadStories, token:", this.token, "online:", navigator.onLine);
-    this.showLoading();
-
-    try {
-      const stories = await StorySource.getStories(this.token);
-      this.renderStories(stories);
-    } catch (error) {
-      this.showError("Gagal memuat cerita. Silakan coba lagi.");
-    } finally {
-      this.hideLoading();
-      document.getElementById("refresh-notif").classList.add("hidden");
-    }
-  }
-
   hideRefreshNotif() {
     console.log("hideRefreshNotif()");
     if (this.refreshNotif) {
@@ -125,6 +111,10 @@ export default class HomePage {
   showStories(stories) {
     console.log(`showStories() dengan ${stories.length} story`);
 
+    if (this.refreshNotif) {
+      this.refreshNotif.classList.add("hidden");
+    }
+
     if (this.storyList) {
       this.storyList.innerHTML = stories
         .sort((a, b) => new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt))
@@ -137,10 +127,15 @@ export default class HomePage {
           }
 
           return `
-            <article class="story-item">
+            <article class="story-item" data-id="${story.id}">
               ${photoSrc ? `<img src="${photoSrc}" alt="Foto dari ${story.name || "Offline User"}" />` : ""}
               <div class="story-content">
-                <h2>${story.name || "Offline User"}</h2>
+                <div class="story-header">
+                  <h2>${story.name || "Offline User"}</h2>
+                  <button class="bookmark-btn" data-id="${story.id}" aria-label="Simpan story ini" title="Simpan story">
+                    <i class="fa-regular fa-bookmark"></i>
+                  </button>
+                </div>
                 <p>${story.description}</p>
                 <small>Tanggal: ${date}</small>
                 ${story.status === "pending_sync" ? "<span class='badge badge-warning'>Menunggu Sync</span>" : ""}
@@ -149,6 +144,8 @@ export default class HomePage {
           `;
         })
         .join("");
+
+      this._wireBookmarkButtons(stories);
     }
 
     this.renderMap(stories);
@@ -159,6 +156,30 @@ export default class HomePage {
         this.#map.invalidateSize(true);
       }
     }, 300);
+  }
+
+  async _wireBookmarkButtons(stories) {
+    const buttons = this.storyList.querySelectorAll(".bookmark-btn");
+    for (const btn of buttons) {
+      const id = btn.dataset.id;
+      const alreadySaved = await isStorySaved(id);
+      if (alreadySaved) {
+        btn.classList.add("saved");
+        btn.querySelector("i").className = "fa-solid fa-bookmark";
+      }
+
+      btn.addEventListener("click", async () => {
+        const story = stories.find((s) => String(s.id) === String(id));
+        if (!story) return;
+
+        if (btn.classList.contains("saved")) return;
+
+        await saveStory(story);
+        btn.classList.add("saved");
+        btn.querySelector("i").className = "fa-solid fa-bookmark";
+        btn.setAttribute("aria-label", "Story sudah tersimpan");
+      });
+    }
   }
 
   showError(message) {
