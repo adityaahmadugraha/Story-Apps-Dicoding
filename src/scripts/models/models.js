@@ -138,6 +138,37 @@ class Models {
     }
   }
 
+  async subscribePushNotification(subscription, token) {
+    const subscriptionJson = subscription.toJSON();
+    const res = await fetch(`${CONFIG.BASE_URL}/notifications/subscribe`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        endpoint: subscriptionJson.endpoint,
+        keys: {
+          p256dh: subscriptionJson.keys.p256dh,
+          auth: subscriptionJson.keys.auth,
+        },
+      }),
+    });
+    return res.json();
+  }
+
+  async unsubscribePushNotification(endpoint, token) {
+    const res = await fetch(`${CONFIG.BASE_URL}/notifications/subscribe`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ endpoint }),
+    });
+    return res.json();
+  }
+
   async sendNotification({ title, body }) {
     if ("serviceWorker" in navigator) {
       const reg = await navigator.serviceWorker.ready;

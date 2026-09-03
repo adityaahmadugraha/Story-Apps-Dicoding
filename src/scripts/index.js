@@ -78,17 +78,25 @@ const VAPID_PUBLIC_KEY = "BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmt
 
 async function initPush(registration) {
   try {
+    const token = Models.getToken();
+    if (!token) {
+      console.warn("⚠️ Belum login, skip subscribe push ke server.");
+      return;
+    }
+
     let subscription = await registration.pushManager.getSubscription();
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
       console.log("Push subscription baru:", JSON.stringify(subscription));
     } else {
       console.log("Sudah ada subscription:", JSON.stringify(subscription));
     }
+
+    const result = await Models.subscribePushNotification(subscription, token);
+    console.log("📡 Subscribe ke server Dicoding:", result);
   } catch (err) {
     console.error("Gagal init push:", err);
   }
