@@ -76,6 +76,56 @@ function urlBase64ToUint8Array(base64String) {
 
 const VAPID_PUBLIC_KEY = "BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk";
 
+let swRegistration = null;
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("./sw.js")
+    .then(async (registration) => {
+      console.log("Service Worker terdaftar:", registration);
+
+      const readyRegistration = await navigator.serviceWorker.ready;
+      swRegistration = readyRegistration;
+
+      handleNotificationBanner();
+    })
+    .catch((err) => console.error("SW gagal daftar:", err));
+}
+
+function handleNotificationBanner() {
+  const banner = document.querySelector("#notif-permission-banner");
+  const enableBtn = document.querySelector("#enable-notif-btn");
+  const dismissBtn = document.querySelector("#dismiss-notif-btn");
+
+  if (!banner || !("Notification" in window)) return;
+
+  const alreadyDismissed = localStorage.getItem("notifBannerDismissed") === "true";
+
+  if (Notification.permission === "default" && !alreadyDismissed) {
+    banner.classList.remove("hidden");
+  }
+
+  if (enableBtn) {
+    enableBtn.addEventListener("click", async () => {
+      const permission = await Notification.requestPermission();
+      console.log("Permission notifikasi:", permission);
+
+      banner.classList.add("hidden");
+
+      if (permission === "granted" && swRegistration) {
+        initPush(swRegistration);
+      }
+    });
+  }
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", () => {
+      banner.classList.add("hidden");
+      localStorage.setItem("notifBannerDismissed", "true");
+    });
+  }
+}
+
 async function initPush(registration) {
   try {
     const token = Models.getToken();
@@ -100,23 +150,4 @@ async function initPush(registration) {
   } catch (err) {
     console.error("Gagal init push:", err);
   }
-}
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("./sw.js")
-    .then(async (registration) => {
-      console.log("Service Worker terdaftar:", registration);
-
-      if ("Notification" in window) {
-        if (Notification.permission === "default") {
-          const permission = await Notification.requestPermission();
-          console.log("Permission notifikasi:", permission);
-        }
-      }
-
-      const readyRegistration = await navigator.serviceWorker.ready;
-      initPush(readyRegistration);
-    })
-    .catch((err) => console.error("SW gagal daftar:", err));
 }

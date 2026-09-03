@@ -662,6 +662,50 @@ body {
   padding: 40px 0;
 }
 
+.notif-banner {
+  background: #fff3cd;
+  border-bottom: 1px solid #ffe69c;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.notif-banner p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #664d03;
+}
+
+.notif-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.notif-banner .btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.notif-banner .btn-primary {
+  background: #6200ee;
+  color: #fff;
+}
+
+.notif-banner .btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.notif-banner.hidden {
+  display: none;
+}
+
 .add-container {
   max-width: 700px;
   margin: 0 auto;
