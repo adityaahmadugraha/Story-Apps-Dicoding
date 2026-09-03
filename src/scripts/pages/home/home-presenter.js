@@ -14,31 +14,41 @@ export default class HomePresenter {
 
   initOnlineListener() {
     window.addEventListener("online", async () => {
+      console.log("🌐 [ONLINE EVENT] Event 'online' terpicu pada", new Date().toISOString());
       await this.loadStories();
     });
   }
 
   async syncOfflineStories(token) {
     if (StoryDB.isSyncInProgress()) {
-      return;
-    }
-
-    let pendingStories = await StoryDB.getPendingStories();
-    if (!pendingStories || pendingStories.length === 0) {
+      console.log("🔒 [SYNC] Sync sudah berjalan, skip panggilan ini.");
       return;
     }
 
     StoryDB.setSyncInProgress(true);
+    console.log("🔓 [SYNC] Mengunci proses sync, mulai...");
+
     let successCount = 0;
 
     try {
       await StoryDB.cleanDuplicatePendingStories();
-      pendingStories = await StoryDB.getPendingStories();
+
+      let pendingStories = await StoryDB.getPendingStories();
+      console.log(
+        `📋 [SYNC] Ditemukan ${pendingStories.length} pending stories:`,
+        pendingStories.map((s) => s.id),
+      );
+
+      if (!pendingStories || pendingStories.length === 0) {
+        console.log("✅ [SYNC] Tidak ada yang perlu di-sync.");
+        return;
+      }
 
       for (const story of pendingStories) {
         try {
-          let photoToSend;
+          console.log(`📤 [SYNC] Mengirim story ${story.id}...`);
 
+          let photoToSend;
           if (story.photoBase64) {
             const photoBlob = dataURLtoBlob(story.photoBase64);
             photoToSend = new File([photoBlob], "synced_photo.jpg", {
@@ -48,6 +58,7 @@ export default class HomePresenter {
           } else if (story.photo) {
             photoToSend = story.photo;
           } else {
+            console.warn(`⚠️ [SYNC] Story ${story.id} tidak punya foto, skip.`);
             continue;
           }
 
@@ -63,29 +74,27 @@ export default class HomePresenter {
           if (response && (response.error === false || response.status === "success")) {
             await StoryDB.deleteStory(story.id);
             successCount++;
-
+            console.log(`✅ [SYNC] Story ${story.id} berhasil dikirim & dihapus dari pending.`);
             localStorage.setItem("newStoryAdded", "true");
-            console.log("Offline story synced & deleted:", story.id);
           } else {
-            console.error("Sync gagal untuk story:", story.id, response);
+            console.error(`❌ [SYNC] Sync gagal untuk story ${story.id}:`, response);
           }
         } catch (syncErr) {
-          console.error("Individual sync error untuk story", story.id, ":", syncErr);
+          console.error(`💥 [SYNC] Error individual untuk story ${story.id}:`, syncErr);
         }
       }
 
-      if (successCount > 0) {
-        if (this.#view.showSnackbar) {
-          this.#view.showSnackbar(`Sync sukses: ${successCount} story dikirim ke server!`);
-        }
+      if (successCount > 0 && this.#view.showSnackbar) {
+        this.#view.showSnackbar(`Sync sukses: ${successCount} story dikirim ke server!`);
       }
     } catch (err) {
-      console.error("Sync error keseluruhan:", err);
+      console.error("💥 [SYNC] Error keseluruhan:", err);
       if (this.#view.showSnackbar) {
         this.#view.showSnackbar("❌ Gagal sync offline stories.", true);
       }
     } finally {
       StoryDB.setSyncInProgress(false);
+      console.log("🔓 [SYNC] Selesai, lock dilepas.");
     }
   }
 
